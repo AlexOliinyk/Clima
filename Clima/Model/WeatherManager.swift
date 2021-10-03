@@ -6,9 +6,10 @@
 //  Copyright © 2021 App Brewery. All rights reserved.
 //
 
-import UIKit
+import Foundation
 
 struct WeatherManager {
+    // Here need to add API key
     let weatherURL = "https://api.openweathermap.org/data/2.5/weather?appid=APIKey&units=metric"
     
     func fetchWeather(cityName: String) {
@@ -27,24 +28,28 @@ struct WeatherManager {
             
             //3. Give the session a task
             
-            let task = session.dataTask(with: url, completionHandler: handle(data:urlResponse:error:))
-            
+            let task = session.dataTask(with: url) { (data, urlResponse, error) in
+                if error != nil {
+                    print(error!)
+                    return
+                }
+                if let safeData = data {
+                    self.parseJSON(weatherData: safeData)
+                }
+            }
             //4. Start the task
             task.resume()
         }
     }
     
-    func handle(data: Data?, urlResponse: URLResponse?, error: Error?) {
-        
-        if error != nil {
-            print(error!)
-            return
+    func parseJSON(weatherData: Data) {
+        let decoder = JSONDecoder()
+        do {
+            let decodedData = try decoder.decode(WeatherData.self, from: weatherData)
+            print(decodedData.main.temp)
+            print(decodedData.weather[0].description)
+        } catch {
+            print(error)
         }
-        
-        if let safeData = data {
-            let dataString = String(data: safeData, encoding: .utf8)
-            print(dataString)
-        }
-        
     }
 }
